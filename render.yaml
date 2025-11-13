@@ -1,0 +1,22 @@
+services:
+  - type: cron
+    name: stock-to-sheet
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js once
+    schedule: "*/5 * * * *"  # Every 5 minutes
+    envVars:
+      - key: GOOGLE_SERVICE_EMAIL
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: SHEET_ID
+        sync: false
+      - key: SHEET_TAB
+        sync: false
+      - key: PRICE_PROVIDER
+        sync: false
+      - key: ALPHA_VANTAGE_KEY
+        sync: false
+
+
