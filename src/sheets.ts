@@ -14,10 +14,23 @@ async function getAuthorizedJWT(): Promise<JWT> {
   }
 
   // Process the private key - handle both escaped newlines and actual newlines
-  const processedKey = privateKey.replace(/\\n/g, "\n").trim();
+  // GitHub Secrets may have literal \n or actual newlines
+  let processedKey = privateKey;
   
-  if (!processedKey || !processedKey.includes("BEGIN PRIVATE KEY")) {
-    throw new Error("GOOGLE_PRIVATE_KEY appears to be invalid or empty. It should start with '-----BEGIN PRIVATE KEY-----'");
+  // Replace escaped newlines with actual newlines
+  processedKey = processedKey.replace(/\\n/g, "\n");
+  
+  // If it doesn't have BEGIN, it might be a single line - try to format it
+  if (!processedKey.includes("BEGIN")) {
+    // Try to detect if it's a base64-encoded key without headers
+    throw new Error("GOOGLE_PRIVATE_KEY must include '-----BEGIN PRIVATE KEY-----' and '-----END PRIVATE KEY-----'");
+  }
+  
+  // Ensure proper formatting
+  processedKey = processedKey.trim();
+  
+  if (!processedKey.includes("BEGIN PRIVATE KEY") && !processedKey.includes("BEGIN RSA PRIVATE KEY")) {
+    throw new Error("GOOGLE_PRIVATE_KEY appears to be invalid. It should start with '-----BEGIN PRIVATE KEY-----' or '-----BEGIN RSA PRIVATE KEY-----'");
   }
 
   const jwt = new google.auth.JWT({
